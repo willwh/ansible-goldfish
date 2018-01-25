@@ -1,0 +1,23 @@
+---
+# defaults file for willwh.goldfish
+vault_service_name:
+goldfish_version: v0.8.0
+goldfish_user:
+  name: goldfish
+  home: /home/goldfish
+  group: goldfish
+goldfish_path: "{{ goldfish_user.home }}/goldfish"
+goldfish_config:
+  tcp:
+    address: "127.0.0.1:8000"
+  vault:
+    address: "http://127.0.0.1:8200"
+    tls_skip_verify: 1
+    runtime_config: "secret/goldfish"
+    approle_login: "auth/approle/login"
+    approle_id: "goldfish"
+    tls_autoredirect:
+    tls_cert_file:
+    tls_key_file:
+    tls_pki_path:
+  disable_mlock: 1

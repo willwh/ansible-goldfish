@@ -1,0 +1,73 @@
+# [Required] listener defines how goldfish will listen to incoming connections
+listener "tcp" {
+	# [Required] [Format: "address", "address:port", or ":port"]
+	# goldfish's listening address and/or port. Simply ":443" would suffice.
+	address          = "{{ goldfish_config.tcp.address }}"
+
+	# [Optional] [Default: 0] [Allowed values: 0, 1]
+	# set to 1 to disable tls & https
+{% if goldfish_config.tcp.tls_disable is defined %}
+	tls_disable      = "{{ goldfish_config.tcp.tls_disable }}"
+{% endif %}
+
+	# [Optional] [Default: 0] [Allowed values: 0, 1]
+	# set to 1 to redirect port 80 to 443 (hard-coded port numbers)
+{% if goldfish_config.tcp.tls_autoredirect is defined %}
+	tls_autoredirect = "{{ goldfish_config.tcp.tls_autoredirect }}"
+{% endif %}
+
+	# One (and only one!) of the following is required (unless tls_disable == 1):
+
+	# [Option 1] the certificate file
+{% if goldfish_config.tls_cert_file is defined %}
+	tls_cert_file    = "{{ goldfish_config.tcp.tls_cert_file }}"
+{% endif %}
+	# [Option 1] the private key file
+{% if goldfish_config.tcp.tls_key_file is defined %}
+	tls_key_file     = "{{ goldfish_config.tcp.tls_key_file }}"
+{% endif %}
+
+	# [Option 2] [Required vault_token at launch time!]
+	# provide a pki endpoint for goldfish to fetch certificates from.
+	# goldfish will request new certificates at half-life and hot-reload
+	# when using this option, bootstrapping at launch time is REQUIRED
+{% if goldfish_config.tcp.tls_pki_path is defined %}
+	tls_pki_path     = "{{ goldfish_config.tcp.tls_pki_path }}"
+{% endif %}
+}
+
+# [Required] vault defines how goldfish should bootstrap to vault
+vault {
+	# [Required] [Format: "protocol://address:port"]
+	# This is vault's address. Vault must be up before goldfish is deployed!
+	address         = "{{ goldfish_config.vault.address }}"
+
+	# [Optional] [Default: 0] [Allowed values: 0, 1]
+	# Set this to 1 to skip verifying the certificate of vault (e.g. self-signed certs)
+{% if goldfish_config.vault.tls_skip_verify is defined %}
+	tls_skip_verify = "{{ goldfish_config.vault.tls_skip_verify }}"
+{% endif %}
+
+	# [Required] [Default: "secret/goldfish"]
+	# This should be a generic secret endpoint where runtime settings are stored
+	# See wiki for what key values are required in this
+	runtime_config  = "{{ goldfish_config.vault.runtime_config }}"
+	# [Optional] [Default: "auth/approle/login"]
+	# You can omit this, unless you mounted approle somewhere weird
+{% if goldfish_config.vault.approle_login is defined %}	
+	approle_login   = "{{ goldfish_config.vault.approle_login }}"
+{% endif %}
+
+	# [Optional] [Default: "goldfish"]
+	# You can omit this if you already customized the approle ID to be 'goldfish'
+{% if goldfish_config.vault.approle_id is defined %}
+	approle_id      = "{{ goldfish_config.vault.approle_id }}"
+{% endif %}
+}
+
+# [Optional] [Default: 0] [Allowed values: 0, 1]
+# Set to 1 to disable mlock. Implementation is similar to vault - see vault docs for details
+# This option will be ignored on unsupported platforms (e.g Windows)
+{% if goldfish_config.disable_mlock is defined %}
+disable_mlock = "{{ goldfish_config.disable_mlock }}"
+{% endif %}

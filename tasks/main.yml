@@ -1,0 +1,49 @@
+---
+# tasks file for willwh.goldfish
+- name: Create goldfish user
+  user:
+    name: "{{ goldfish_user.name }}"
+    home: "{{ goldfish_user.home }}"
+  become: true
+  become_user: root
+- name: Ensure goldfish path exists
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: "{{ goldfish_user.name }}"
+    group: "{{ goldfish_user.group }}"
+  with_items:
+    - "{{ goldfish_path }}"
+    - "{{ goldfish_path }}/config"
+  become: true
+  become_user: "{{ goldfish_user.name }}"
+- name: Get goldfish version "{{ goldfish_version }}"
+  shell: "curl -L -o goldfish https://github.com/Caiyeon/goldfish/releases/download/{{ goldfish_version }}/goldfish-linux-amd64"
+  args:
+    chdir: "{{ goldfish_path }}"
+    creates: goldfish
+  become: true
+  become_user: "{{ goldfish_user.name }}"
+- name: Make goldfish executable
+  file:
+    path: "{{ goldfish_path }}/goldfish"
+    mode: 0755
+  become: true
+  become_user: "{{ goldfish_user.name }}"
+- name: Deploy service template
+  template:
+    src: goldfish.service.j2
+    dest: /etc/systemd/system/goldfish.service
+  become: true
+  become_user: root
+- name: Add goldfish config
+  template:
+    src: config.hcl.j2
+    dest: "{{ goldfish_path }}/config/config.hcl"
+  become: true
+  become_user: "{{ goldfish_user.name }}"
+- name: Start service
+  service:
+    name: goldfish
+    state: started

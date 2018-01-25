@@ -1,0 +1,6 @@
+---
+# handlers file for willwh.goldfish
+- name: restart goldfish
+  service:
+    name: goldfish
+    state: restarted

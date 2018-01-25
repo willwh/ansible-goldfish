@@ -1,0 +1,16 @@
+[Unit]
+Description=goldfish
+After=network.target {{ vault_service_name }}
+
+[Service]
+WorkingDirectory={{ goldfish_path }}
+Restart=on-failure
+User={{ goldfish_user.name }}
+
+ExecStart={{ goldfish_path }}/goldfish -config {{ goldfish_path }}/config/config.hcl
+
+ExecReload=/bin/kill -s=SIGHUP $MAINPID
+KillSignal=SIGTERM
+
+[Install]
+WantedBy=multi-user.target
